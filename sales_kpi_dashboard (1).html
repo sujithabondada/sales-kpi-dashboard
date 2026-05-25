@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales KPI Dashboard — May 2026</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-page: #f5f5f2;
+      --bg-card: #ffffff;
+      --bg-secondary: #f0efea;
+      --text-primary: #1a1a18;
+      --text-secondary: #6b6a64;
+      --text-tertiary: #9c9b94;
+      --border: rgba(0,0,0,0.1);
+      --border-light: rgba(0,0,0,0.06);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-page: #1a1a18;
+        --bg-card: #242422;
+        --bg-secondary: #2c2c2a;
+        --text-primary: #f0efea;
+        --text-secondary: #9c9b94;
+        --text-tertiary: #6b6a64;
+        --border: rgba(255,255,255,0.1);
+        --border-light: rgba(255,255,255,0.06);
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .dashboard {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .header-left h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+    .header-left p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .header-badge {
+      background: #0C447C;
+      color: #E6F1FB;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 20px;
+      letter-spacing: 0.04em;
+    }
+
+    /* Section label */
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 12px;
+    }
+
+    /* KPI Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    .kpi-icon {
+      font-size: 18px;
+      color: var(--text-tertiary);
+      margin-bottom: 8px;
+    }
+    .kpi-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .kpi-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+    .kpi-change {
+      font-size: 11px;
+      margin-top: 5px;
+    }
+    .up { color: #3B6D11; }
+    .down { color: #A32D2D; }
+
+    /* Chart row */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 680px) {
+      .charts-row { grid-template-columns: 1fr; }
+    }
+
+    .chart-card {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .chart-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 3px;
+    }
+    .chart-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .legend span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 2px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    /* Funnel */
+    .funnel-bar { display: flex; flex-direction: column; gap: 9px; margin-top: 4px; }
+    .funnel-row { display: flex; align-items: center; gap: 10px; }
+    .funnel-label { font-size: 11px; color: var(--text-secondary); width: 76px; flex-shrink: 0; text-align: right; }
+    .funnel-track { flex: 1; background: var(--bg-secondary); border-radius: 3px; height: 24px; overflow: hidden; }
+    .funnel-fill { height: 100%; border-radius: 3px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-size: 11px; font-weight: 500; }
+
+    /* Pipeline table */
+    .pipeline-list { margin-top: 4px; }
+    .pipeline-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 0;
+      border-bottom: 0.5px solid var(--border-light);
+      gap: 8px;
+    }
+    .pipeline-row:last-child { border-bottom: none; }
+    .pipeline-name { font-size: 13px; font-weight: 500; color: var(--text-primary); flex: 1; }
+    .pipeline-stage {
+      font-size: 10px;
+      font-weight: 500;
+      padding: 3px 9px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+    .pipeline-val { font-size: 12px; color: var(--text-secondary); min-width: 60px; text-align: right; }
+    .stage-neg  { background: #FAEEDA; color: #633806; }
+    .stage-prop { background: #E6F1FB; color: #0C447C; }
+    .stage-demo { background: #EEEDFE; color: #3C3489; }
+    .stage-close{ background: #EAF3DE; color: #27500A; }
+
+    /* Full-width bottom card */
+    .full-card {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 0.5px solid var(--border-light);
+    }
+  </style>
+</head>
+<body>
+<div class="dashboard">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Sales KPI Dashboard</h1>
+      <p>Performance overview &mdash; May 2026 &nbsp;|&nbsp; Updated daily</p>
+    </div>
+    <span class="header-badge"><i class="ti ti-chart-bar" style="vertical-align:-1px; margin-right:4px;"></i>Live Report</span>
+  </div>
+
+  <!-- KPI Cards -->
+  <p class="section-label">Key performance indicators</p>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon"><i class="ti ti-currency-dollar"></i></div>
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-value">$4.82M</div>
+      <div class="kpi-change up">▲ 12.4% vs last month</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon"><i class="ti ti-chart-line"></i></div>
+      <div class="kpi-label">Units Sold</div>
+      <div class="kpi-value">3,140</div>
+      <div class="kpi-change up">▲ 8.1% vs last month</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon"><i class="ti ti-users"></i></div>
+      <div class="kpi-label">New Customers</div>
+      <div class="kpi-value">287</div>
+      <div class="kpi-change down">▼ 3.2% vs last month</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon"><i class="ti ti-percentage"></i></div>
+      <div class="kpi-label">Conversion Rate</div>
+      <div class="kpi-value">18.4%</div>
+      <div class="kpi-change up">▲ 1.7 pts vs last month</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon"><i class="ti ti-receipt"></i></div>
+      <div class="kpi-label">Avg Deal Size</div>
+      <div class="kpi-value">$1,536</div>
+      <div class="kpi-change up">▲ 4.0% vs last month</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon"><i class="ti ti-clock"></i></div>
+      <div class="kpi-label">Sales Cycle</div>
+      <div class="kpi-value">21 days</div>
+      <div class="kpi-change up">▲ 2 days faster</div>
+    </div>
+  </div>
+
+  <!-- Revenue + Product Mix -->
+  <p class="section-label">Revenue analysis</p>
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">Monthly revenue</div>
+      <div class="chart-sub">Jan – May 2026, in $000s</div>
+      <div class="legend">
+        <span><span class="legend-dot" style="background:#185FA5;"></span>Revenue</span>
+        <span><span class="legend-dot" style="background:transparent; border: 1.5px dashed #3B6D11;"></span>Target</span>
+      </div>
+      <div style="position: relative; height: 200px;">
+        <canvas id="revenueChart" role="img" aria-label="Monthly revenue vs target bar chart Jan to May 2026">Revenue: Jan $3.2M, Feb $3.7M, Mar $4.1M, Apr $4.3M, May $4.82M. Targets: $3.5M, $3.8M, $4.0M, $4.5M, $5.0M.</canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Revenue by product</div>
+      <div class="chart-sub">Current month breakdown</div>
+      <div class="legend">
+        <span><span class="legend-dot" style="background:#185FA5;"></span>Enterprise 45%</span>
+        <span><span class="legend-dot" style="background:#534AB7;"></span>SMB 28%</span>
+        <span><span class="legend-dot" style="background:#0F6E56;"></span>Starter 15%</span>
+        <span><span class="legend-dot" style="background:#993C1D;"></span>Services 12%</span>
+      </div>
+      <div style="position: relative; height: 200px;">
+        <canvas id="donutChart" role="img" aria-label="Donut chart of revenue by product: Enterprise 45%, SMB 28%, Starter 15%, Services 12%">Enterprise 45%, SMB 28%, Starter 15%, Services 12%.</canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Funnel + Pipeline -->
+  <p class="section-label">Pipeline & deals</p>
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">Sales funnel</div>
+      <div class="chart-sub">Current pipeline conversion stages</div>
+      <div class="funnel-bar">
+        <div class="funnel-row">
+          <div class="funnel-label">Leads</div>
+          <div class="funnel-track">
+            <div class="funnel-fill" style="width:100%; background:#B5D4F4; color:#0C447C;">1,560</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Qualified</div>
+          <div class="funnel-track">
+            <div class="funnel-fill" style="width:72%; background:#85B7EB; color:#0C447C;">1,124</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Proposal</div>
+          <div class="funnel-track">
+            <div class="funnel-fill" style="width:48%; background:#378ADD; color:#E6F1FB;">748</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Demo</div>
+          <div class="funnel-track">
+            <div class="funnel-fill" style="width:30%; background:#185FA5; color:#E6F1FB;">468</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Closed Won</div>
+          <div class="funnel-track">
+            <div class="funnel-fill" style="width:18%; background:#0C447C; color:#E6F1FB;">287</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Top open deals</div>
+      <div class="chart-sub">Sorted by deal value</div>
+      <div class="pipeline-list">
+        <div class="pipeline-row">
+          <div class="pipeline-name">Nexora Corp</div>
+          <span class="pipeline-stage stage-close">Closing</span>
+          <div class="pipeline-val">$98,000</div>
+        </div>
+        <div class="pipeline-row">
+          <div class="pipeline-name">Blueshift AI</div>
+          <span class="pipeline-stage stage-demo">Demo</span>
+          <div class="pipeline-val">$72,500</div>
+        </div>
+        <div class="pipeline-row">
+          <div class="pipeline-name">Meridian Group</div>
+          <span class="pipeline-stage stage-prop">Proposal</span>
+          <div class="pipeline-val">$64,200</div>
+        </div>
+        <div class="pipeline-row">
+          <div class="pipeline-name">Quanta Systems</div>
+          <span class="pipeline-stage stage-demo">Demo</span>
+          <div class="pipeline-val">$51,000</div>
+        </div>
+        <div class="pipeline-row">
+          <div class="pipeline-name">Drifton Labs</div>
+          <span class="pipeline-stage stage-neg">Negotiation</span>
+          <div class="pipeline-val">$45,800</div>
+        </div>
+        <div class="pipeline-row">
+          <div class="pipeline-name">Celera Inc</div>
+          <span class="pipeline-stage stage-prop">Proposal</span>
+          <div class="pipeline-val">$38,400</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rep Performance -->
+  <p class="section-label">Team performance</p>
+  <div class="full-card">
+    <div class="chart-title">Sales rep performance</div>
+    <div class="chart-sub">Revenue closed this month vs individual target</div>
+    <div class="legend">
+      <span><span class="legend-dot" style="background:#185FA5;"></span>Achieved</span>
+      <span><span class="legend-dot" style="background:#D3D1C7;"></span>Target</span>
+    </div>
+    <div style="position: relative; height: 240px;">
+      <canvas id="repChart" role="img" aria-label="Horizontal bar chart showing each sales rep's revenue achieved versus their target for May 2026">Sarah K. $312K vs $300K target; James L. $278K vs $300K; Priya N. $255K vs $280K; Marcus T. $231K vs $280K; Elena R. $198K vs $250K.</canvas>
+    </div>
+  </div>
+
+  <div class="footer">
+    Sales KPI Dashboard &nbsp;&bull;&nbsp; May 2026 &nbsp;&bull;&nbsp; Generated for internship submission
+  </div>
+
+</div>
+
+<script>
+  const gridColor = 'rgba(128,128,128,0.1)';
+  const tickColor = '#888780';
+
+  // Revenue chart
+  new Chart(document.getElementById('revenueChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Jan','Feb','Mar','Apr','May'],
+      datasets: [
+        {
+          label: 'Revenue ($K)',
+          data: [3200,3700,4100,4300,4820],
+          backgroundColor: ['#B5D4F4','#85B7EB','#378ADD','#185FA5','#0C447C'],
+          borderRadius: 5,
+          order: 2
+        },
+        {
+          label: 'Target',
+          data: [3500,3800,4000,4500,5000],
+          type: 'line',
+          borderColor: '#3B6D11',
+          borderDash: [5,4],
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: '#3B6D11',
+          fill: false,
+          tension: 0.3,
+          order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' $' + ctx.raw.toLocaleString() + 'K' } }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 }, callback: v => '$' + v + 'K' } }
+      }
+    }
+  });
+
+  // Donut chart
+  new Chart(document.getElementById('donutChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Enterprise','SMB','Starter','Services'],
+      datasets: [{
+        data: [45,28,15,12],
+        backgroundColor: ['#185FA5','#534AB7','#0F6E56','#993C1D'],
+        borderWidth: 0,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' ' + ctx.raw + '%' } }
+      }
+    }
+  });
+
+  // Rep performance
+  new Chart(document.getElementById('repChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Sarah K.','James L.','Priya N.','Marcus T.','Elena R.'],
+      datasets: [
+        {
+          label: 'Achieved',
+          data: [312000,278000,255000,231000,198000],
+          backgroundColor: '#185FA5',
+          borderRadius: 4,
+          barPercentage: 0.45
+        },
+        {
+          label: 'Target',
+          data: [300000,300000,280000,280000,250000],
+          backgroundColor: '#D3D1C7',
+          borderRadius: 4,
+          barPercentage: 0.45
+        }
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' $' + (ctx.raw/1000).toFixed(0) + 'K' } }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 }, callback: v => '$' + (v/1000) + 'K' } },
+        y: { grid: { display: false }, ticks: { color: tickColor, font: { size: 12 } } }
+      }
+    }
+  });
+</script>
+</body>
+</html>
